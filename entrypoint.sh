@@ -14,8 +14,8 @@ iptables -t mangle -A PREROUTING -j YOUTUBE
 iptables -t mangle -A YOUTUBE -p tcp -m multiport --dports 80,443 \
     -m string --algo bm --string "youtube.com" -j MARK --set-mark 1
 
-# Start SOCKS5 proxy server
-sockd -D
+# Start HTTP proxy server (tinyproxy)
+/etc/init.d/tinyproxy start
 
 # Keep container running
 tail -f /dev/null
