@@ -8,5 +8,6 @@ docker run -d `
   --cap-add=SYS_ADMIN `
   --device /dev/net/tun `
   --privileged `
+  -e "./surfshark_albania.conf:/etc/wireguard/wg0.conf" `
   -p 1080:1080 `
   wireguard-proxy

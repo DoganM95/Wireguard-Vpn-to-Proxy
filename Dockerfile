@@ -12,8 +12,6 @@ RUN apt-get update && apt-get install -y \
     procps \
     && apt-get clean
 
-COPY ./surfshark_albania.conf /etc/wireguard/wg0.conf
-
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
