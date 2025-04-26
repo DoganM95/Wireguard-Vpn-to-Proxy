@@ -26,17 +26,17 @@ ip rule add to 104.26.12.205 table 100
 ip rule add to 172.217.0.0/16 table 100 # Google/Youtube IPs
 ip rule add to 142.250.0.0/15 table 100 # Google Cloud IPs
 
-# Set up iptables mangle rule for VPN routing
-iptables -t mangle -N RELAY || true
-iptables -t mangle -A PREROUTING -j RELAY
+# # Set up iptables mangle rule for VPN routing
+# iptables -t mangle -N RELAY || true
+# iptables -t mangle -A PREROUTING -j RELAY
 
-# Mark YouTube HTTPS traffic
-iptables -t mangle -A RELAY -p tcp --dport 443 \
-    -m string --algo bm --string "youtube.com" -j MARK --set-mark 1
+# # Mark YouTube HTTPS traffic
+# iptables -t mangle -A RELAY -p tcp --dport 443 \
+#     -m string --algo bm --string "youtube.com" -j MARK --set-mark 1
 
-# Mark api.ipify.org HTTPS traffic
-iptables -t mangle -A RELAY -p tcp --dport 443 \
-    -m string --algo bm --string "api.ipify.org" -j MARK --set-mark 1
+# # Mark api.ipify.org HTTPS traffic
+# iptables -t mangle -A RELAY -p tcp --dport 443 \
+#     -m string --algo bm --string "api.ipify.org" -j MARK --set-mark 1
 
 # Start Tinyproxy
 /etc/init.d/tinyproxy start
