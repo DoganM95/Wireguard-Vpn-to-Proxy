@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y \
     procps \
     && apt-get clean
 
+COPY ./dns-update.sh /dns-update.sh
+RUN chmod +x /dns-update.sh
+
 COPY ./squid.conf /etc/squid/squid.conf
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

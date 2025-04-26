@@ -14,16 +14,12 @@ wg-quick up wg0
 PROXY_UID=$(id -u proxy) || PROXY_UID=$(id -u proxyuser) || PROXY_UID=$(id -u nobody)
 ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
 
-# Setup split routing
+# Setup VPN routing table
 ip rule add fwmark 1 table 100
 ip route add default dev wg0 table 100
 
-# Example IPs
-ip rule add to 104.26.13.205 table 100
-ip rule add to 172.67.74.152 table 100
-ip rule add to 104.26.12.205 table 100
-ip rule add to 172.217.0.0/16 table 100
-ip rule add to 142.250.0.0/15 table 100
+# Start dynamic DNS updater
+/dns-update.sh &
 
 # Start Squid
 squid -N -f /etc/squid/squid.conf
