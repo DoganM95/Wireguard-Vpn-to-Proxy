@@ -2,8 +2,5 @@ FROM alpine:latest
 
 RUN apk add --no-cache wireguard-tools iptables curl
 
-# Entrypoint to start WireGuard VPN connection
-ENTRYPOINT ["wg-quick", "up", "wg0"]
-
-# Keep the container running
-CMD ["sleep", "infinity"]
+# Use a shell script as entrypoint to avoid issues with argument handling
+ENTRYPOINT ["sh", "-c", "wg-quick up wg0 && sleep infinity"]
