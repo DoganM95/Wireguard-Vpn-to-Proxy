@@ -6,29 +6,18 @@ RUN apt-get update && apt-get install -y \
     iptables \
     nftables \
     dnsutils \
-    dante-server \
-    tinyproxy \
+    3proxy \
     openresolv \
     procps \
     && apt-get clean
 
-RUN echo "User nobody" > /etc/tinyproxy/tinyproxy.conf && \
-    echo "Group nogroup" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Port 1080" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Listen 0.0.0.0" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Timeout 600" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "DefaultErrorFile \"/usr/share/tinyproxy/default.html\"" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "StatHost \"tinyproxy.stats\"" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Logfile \"/var/log/tinyproxy/tinyproxy.log\"" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "LogLevel Info" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "MaxClients 100" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "MinSpareServers 5" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "MaxSpareServers 20" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "StartServers 10" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Allow 10.0.0.0/8" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "Allow 192.168.0.0/16" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "ConnectPort 443" >> /etc/tinyproxy/tinyproxy.conf && \
-    echo "ConnectPort 80" >> /etc/tinyproxy/tinyproxy.conf
+RUN echo "nserver 8.8.8.8" > /etc/3proxy/3proxy.cfg && \
+    echo "nscache 65536" >> /etc/3proxy/3proxy.cfg && \
+    echo "timeouts 1 5 30 60 180 1800 15 60" >> /etc/3proxy/3proxy.cfg && \
+    echo "log /dev/null" >> /etc/3proxy/3proxy.cfg && \
+    echo "auth none" >> /etc/3proxy/3proxy.cfg && \
+    echo "socks -p1080" >> /etc/3proxy/3proxy.cfg
+
 
 COPY ./entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
