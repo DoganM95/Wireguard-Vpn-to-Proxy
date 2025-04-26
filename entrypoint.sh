@@ -21,6 +21,7 @@ ip route add default dev wg0 table 100
 # Create mangle chain for relay marking
 iptables -t mangle -N RELAY || true
 iptables -t mangle -A PREROUTING -j RELAY
+iptables -t mangle -A OUTPUT -j RELAY
 
 # Start dynamic DNS updater
 /dns-update.sh &
