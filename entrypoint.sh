@@ -12,6 +12,8 @@ wg-quick up wg0
 
 # NAT Masquerade outgoing VPN traffic
 iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
+iptables -A FORWARD -i wg0 -j ACCEPT
+iptables -A FORWARD -o wg0 -j ACCEPT
 
 # Avoid routing DNS queries into VPN
 ip rule add to 8.8.8.8 lookup main
