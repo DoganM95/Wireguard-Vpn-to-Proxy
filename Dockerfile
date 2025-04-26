@@ -13,7 +13,8 @@ RUN echo 'listen-address  0.0.0.0:8118' > /etc/privoxy/config && \
 ENTRYPOINT ["sh", "-c", "\
     wg-quick up wg0 && \
     echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
-    ip route add $(getent ahostsv4 api.ipify.org | head -n1 | awk '{print $1}')/32 dev wg0 && \
+    API_IP=$(getent ahostsv4 api.ipify.org | head -n1 | awk '{print $1}') && \
+    ip route add ${API_IP}/32 dev wg0 && \
     ip route add 10.0.0.0/24 via $(ip route show default | awk '/default/ {print $3}') dev eth0 && \
     privoxy --no-daemon /etc/privoxy/config \
     "]
