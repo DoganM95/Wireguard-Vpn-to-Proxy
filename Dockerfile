@@ -16,12 +16,12 @@ ENTRYPOINT ["sh", "-c", "\
     ip rule del table 51820 || true && \
     ip rule del table main suppress_prefixlength 0 || true && \
     echo 'nameserver 8.8.8.8' > /etc/resolv.conf && \
-    ip route add 172.67.74.152/32 dev wg0 table 100 && \
-    ip route add 104.26.12.205/32 dev wg0 table 100 && \
-    ip route add 104.26.13.205/32 dev wg0 table 100 && \
-    ip rule add to 172.67.74.152/32 lookup 100 && \
-    ip rule add to 104.26.12.205/32 lookup 100 && \
-    ip rule add to 104.26.13.205/32 lookup 100 && \
+    ip route add 104.16.0.0/12 dev wg0 table 100 && \
+    ip route add 172.64.0.0/13 dev wg0 table 100 && \
+    ip route add 131.0.72.0/22 dev wg0 table 100 && \
+    ip rule add to 104.16.0.0/12 lookup 100 && \
+    ip rule add to 172.64.0.0/13 lookup 100 && \
+    ip rule add to 131.0.72.0/22 lookup 100 && \
     ip rule add from all lookup main && \
     ip route add 10.0.0.0/24 via $GATEWAY dev eth0 && \
     privoxy --no-daemon /etc/privoxy/config \
