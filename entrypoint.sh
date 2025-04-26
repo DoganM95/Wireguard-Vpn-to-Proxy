@@ -10,6 +10,9 @@ fi
 # Start WireGuard
 wg-quick up wg0
 
+# Masquerade VPN traffic
+iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
+
 # Fix: bypass VPN for proxy process
 PROXY_UID=$(id -u proxy) || PROXY_UID=$(id -u proxyuser) || PROXY_UID=$(id -u nobody)
 ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
