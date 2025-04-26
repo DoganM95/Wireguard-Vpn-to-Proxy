@@ -18,6 +18,10 @@ ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
 ip rule add fwmark 1 table 100
 ip route add default dev wg0 table 100
 
+# Create mangle chain for relay marking
+iptables -t mangle -N RELAY || true
+iptables -t mangle -A PREROUTING -j RELAY
+
 # Start dynamic DNS updater
 /dns-update.sh &
 
