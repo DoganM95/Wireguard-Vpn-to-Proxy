@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y \
     procps \
     && apt-get clean
 
+
 # Build 3proxy from source
 RUN wget https://github.com/z3APA3A/3proxy/archive/refs/heads/master.zip -O /tmp/3proxy.zip && \
     cd /tmp && \
@@ -21,9 +22,10 @@ RUN wget https://github.com/z3APA3A/3proxy/archive/refs/heads/master.zip -O /tmp
     cd 3proxy-master && \
     make -f Makefile.Linux && \
     mkdir -p /usr/local/3proxy/bin /usr/local/3proxy/logs /usr/local/3proxy/stat && \
-    cp src/3proxy /usr/local/3proxy/bin/ && \
+    cp bin/3proxy /usr/local/3proxy/bin/ && \        
     ln -s /usr/local/3proxy/bin/3proxy /usr/bin/3proxy && \
     rm -rf /tmp/*
+
 
 RUN echo "nserver 8.8.8.8" > /etc/3proxy/3proxy.cfg && \
     echo "nscache 65536" >> /etc/3proxy/3proxy.cfg && \
