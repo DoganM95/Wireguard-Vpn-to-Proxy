@@ -13,6 +13,9 @@ wg-quick up wg0
 # NAT Masquerade outgoing VPN traffic
 iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
 
+# Avoid routing DNS queries into VPN
+ip rule add to 8.8.8.8 lookup main
+
 # Fix: bypass VPN for proxy process
 PROXY_UID=$(id -u proxy) || PROXY_UID=$(id -u proxyuser) || PROXY_UID=$(id -u nobody)
 ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
