@@ -1,15 +1,9 @@
-FROM debian:bullseye-slim
+FROM alpine:latest
 
-RUN apt-get update && apt-get install -y \
-    wireguard-tools \
-    iproute2 \
-    openresolv \
-    dnsutils \
-    curl \
-    procps \
-    && apt-get clean
+RUN apk add --no-cache wireguard-tools iptables
 
-COPY ./entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh
+# Ensure wireguard module is loaded on host; alpine will use it
+ENTRYPOINT ["wg-quick", "up", "/etc/wireguard/wg0.conf"]
 
-ENTRYPOINT ["/entrypoint.sh"]
+# Keep the container alive
+CMD ["sleep", "infinity"]
