@@ -14,9 +14,14 @@ wg-quick up wg0
 PROXY_UID=$(id -u nobody)
 ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
 
-# Create a routing table for marked packets (YouTube, ipify)
+# Create a routing table for marked packets
 ip rule add fwmark 1 table 100
 ip route add default dev wg0 table 100
+
+# Direct api.ipify.org IPs over VPN (IP-based split routing)
+ip rule add to 104.26.13.205 table 100
+ip rule add to 172.67.74.152 table 100
+ip rule add to 104.26.12.205 table 100
 
 # Set up iptables mangle rule for VPN routing
 iptables -t mangle -N RELAY || true
