@@ -1,7 +1,7 @@
 FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install -y \
-    squid \
+    privoxy \
     wireguard-tools \
     iproute2 \
     iptables \
@@ -9,13 +9,11 @@ RUN apt-get update && apt-get install -y \
     dnsutils \
     openresolv \
     procps \
+    curl \
     && apt-get clean
 
-COPY ./dns-update.sh /dns-update.sh
-RUN chmod +x /dns-update.sh
-
-COPY ./squid.conf /etc/squid/squid.conf
 COPY ./entrypoint.sh /entrypoint.sh
+COPY ./privoxy-config /etc/privoxy/config
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
