@@ -10,14 +10,6 @@ fi
 # Start WireGuard
 wg-quick up wg0
 
-# NAT outgoing VPN traffic
-iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-iptables -A FORWARD -i wg0 -j ACCEPT
-iptables -A FORWARD -o wg0 -j ACCEPT
-
-# Fix DNS resolution (bypass Google's DNS through main route)
-ip rule add to 8.8.8.8 lookup main
-
 # Fix: bypass VPN for proxy process
 PROXY_UID=$(id -u proxy) || PROXY_UID=$(id -u proxyuser) || PROXY_UID=$(id -u nobody)
 ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
@@ -26,15 +18,12 @@ ip rule add from all uidrange ${PROXY_UID}-${PROXY_UID} lookup main
 ip rule add fwmark 1 table 100
 ip route add default dev wg0 table 100
 
-# Example hardcoded IPs to relay
+# Example IPs
 ip rule add to 104.26.13.205 table 100
 ip rule add to 172.67.74.152 table 100
 ip rule add to 104.26.12.205 table 100
 ip rule add to 172.217.0.0/16 table 100
 ip rule add to 142.250.0.0/15 table 100
-
-# FINAL: Replace the global default route to VPN
-ip route replace default dev wg0
 
 # Start Squid
 squid -N -f /etc/squid/squid.conf
