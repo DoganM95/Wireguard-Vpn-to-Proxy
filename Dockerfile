@@ -1,19 +1,15 @@
-FROM debian:bullseye
+FROM debian:bullseye-slim
 
 RUN apt-get update && apt-get install -y \
-    privoxy \
     wireguard-tools \
     iproute2 \
-    iptables \
-    nftables \
-    dnsutils \
     openresolv \
-    procps \
+    dnsutils \
     curl \
+    procps \
     && apt-get clean
 
 COPY ./entrypoint.sh /entrypoint.sh
-COPY ./privoxy-config /etc/privoxy/config
 RUN chmod +x /entrypoint.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
