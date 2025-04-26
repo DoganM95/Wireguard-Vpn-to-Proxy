@@ -1,9 +1,9 @@
 FROM alpine:latest
 
-RUN apk add --no-cache wireguard-tools iptables
+RUN apk add --no-cache wireguard-tools iptables curl
 
-# Ensure wireguard module is loaded on host; alpine will use it
-ENTRYPOINT ["wg-quick", "up", "/etc/wireguard/wg0.conf"]
+# Entrypoint to start WireGuard VPN connection
+ENTRYPOINT ["wg-quick", "up", "wg0"]
 
-# Keep the container alive
+# Keep the container running
 CMD ["sleep", "infinity"]
