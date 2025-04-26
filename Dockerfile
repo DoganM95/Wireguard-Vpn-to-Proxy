@@ -11,19 +11,10 @@ RUN echo 'listen-address  0.0.0.0:8118' > /etc/privoxy/config && \
     echo 'permit-access 0.0.0.0/0' >> /etc/privoxy/config
 
 ENTRYPOINT ["sh", "-c", "\
-    GATEWAY=$(ip route show default | awk '/default/ {print $3}') && \
     wg-quick up wg0 && \
-    ip rule del table 51820 || true && \
-    ip rule del table main suppress_prefixlength 0 || true && \
-    echo 'nameserver 1.1.1.1' > /etc/resolv.conf && \
-    ip route add 172.67.74.152/32 dev wg0 table 100 && \
-    ip route add 104.26.12.205/32 dev wg0 table 100 && \
-    ip route add 104.26.13.205/32 dev wg0 table 100 && \
-    ip rule add to 172.67.74.152/32 lookup 100 && \
-    ip rule add to 104.26.12.205/32 lookup 100 && \
-    ip rule add to 104.26.13.205/32 lookup 100 && \
-    ip rule add from all lookup main && \
-    ip route add default via $GATEWAY dev eth0 table main && \
-    ip route add 10.0.0.0/24 via $GATEWAY dev eth0 table main && \
+    ip route add 10.0.0.0/24 via $(ip route show default | awk '/default/ {print $3}') dev eth0 && \
+    iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE && \
+    iptables -A FORWARD -i eth0 -o wg0 -j ACCEPT && \
+    iptables -A FORWARD -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT && \
     privoxy --no-daemon /etc/privoxy/config \
     "]
