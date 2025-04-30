@@ -12,6 +12,11 @@ Using any of these locations will give you a lot less ads, making youtube almost
 - Moldova
 - Myanmar
 
+## Use netflix from anywhere
+
+When you e.g. travel a lot, netflix locks you out as your ip address changes to a foreign one. 
+By setting up a wireguard server in your home network, you can connect "dumb" devices (with no vpn client but configurable proxy) to your home's wireguard and enjoy again, what you pay for.
+
 ## Quick downloads
 
 If you just want to download q.g. 1 file from a server with pvn, just use a docker run command. 
