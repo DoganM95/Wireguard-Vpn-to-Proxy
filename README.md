@@ -26,4 +26,5 @@ Also great for quick testing of region-locks.
 # Features
 
 - Lightweight vpn to proxy adapter available, with a docker image size of 20 MB
+- Based on privoxy
 - Split tunneling: set a whitelist of hosts, the vpn connection should be used for only, the rest is routed normally with your real ip
