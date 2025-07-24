@@ -1,6 +1,6 @@
 # Intro
 
-This app turns any wireshark conf file into a docker container, that serves the vpn connection as a http/https proxy server, in other works: a vpn to http proxy adapter. The provided wireshark configuration file can be from any host, be it your home, business or vpn provider connection.
+This app turns any wireshark conf file into a docker container, that serves the vpn connection as a http/https proxy server, in other works: a vpn to http proxy adapter. The provided wireshark configuration file can be from any host, be it your home, business or vpn provider connection. This project in beta phase and only ready for development/testing purposes.
 
 # Use cases
 
