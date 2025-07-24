@@ -28,3 +28,24 @@ Also great for quick testing of region-locks.
 - Lightweight vpn to proxy adapter available, with a docker image size of 20 MB
 - Based on privoxy
 - Split tunneling: set a whitelist of hosts, the vpn connection should be used for only, the rest is routed normally with your real ip
+
+# Docker
+
+Run the container using the following command, for now the container needs to run `--privileged`
+
+```shell
+docker run -d \
+    --name wireguard-proxy \
+    --cap-add=NET_ADMIN \
+    --cap-add=SYS_MODULE \
+    --cap-add=SYS_ADMIN \
+    --device /dev/net/tun \
+    --privileged \
+    --pull always \
+    --restart always \
+    -v "/home/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
+    -p 1080:1080 \
+    wireguard-proxy
+```
+
+- `-v "...:/etc/wireguard/wg0.conf"` wg conf file to mount
