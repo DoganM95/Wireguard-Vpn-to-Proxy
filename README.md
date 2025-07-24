@@ -45,7 +45,7 @@ docker run -d \
     --restart always \
     -v "/home/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
     -p 1080:1080 \
-    wireguard-proxy
+    ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
 
 - `-v "...:/etc/wireguard/wg0.conf"` wg conf file to mount
