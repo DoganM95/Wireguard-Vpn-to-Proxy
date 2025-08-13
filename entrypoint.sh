@@ -25,7 +25,7 @@ ip route add default dev wg0 table vpn || true
 echo "nameserver 162.252.172.57" > /etc/resolv.conf
 echo "nameserver 149.154.159.92" >> /etc/resolv.conf
 
-# Add rules for whitelisted domains
+# Add rules for whitelisted domains (initial)
 if [ -n "$DOMAINS_TO_RELAY" ]; then
     for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
         echo "Resolving $domain..."
@@ -56,6 +56,6 @@ ip rule show
 echo "VPN Table:"
 ip route show table vpn
 
-# Start Privoxy
+# Start Privoxy in foreground (PID 1)
 echo "Starting Privoxy..."
 exec privoxy --no-daemon /etc/privoxy/config
