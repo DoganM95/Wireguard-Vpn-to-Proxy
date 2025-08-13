@@ -1,51 +1,102 @@
 # Intro
 
-This app turns any wireshark conf file into a docker container, that serves the vpn connection as a http/https proxy server, in other works: a vpn to http proxy adapter. The provided wireshark configuration file can be from any host, be it your home, business or vpn provider connection. This project in beta phase and only ready for development/testing purposes.
+Transforms any WireGuard configuration file into a Docker container that serves a VPN connection as an HTTP/HTTPS proxy. In other words, it acts as a **VPN-to-proxy adapter**. The provided WireGuard configuration can originate from any host—home, business, or VPN provider.
 
-# Use cases
+## Use Cases
 
-## Block ads on youtube
+### Block Ads on YouTube
 
-The proxy adapter comes in handy, if your device has no option to configure a vpn client, but allows you to set a proxy server, e.g. a PlayStation.
-Using any of these locations will give you a lot less ads, making youtube almost or fully ad free: 
-- Albania
-- Moldova
-- Myanmar
+Many devices (e.g., PlayStation, smart TVs) cannot run a VPN client directly but allow proxy configuration. By routing YouTube traffic through a VPN via this proxy, you can significantly reduce ads. Recommended proxy locations for minimal ads include:
 
-## Use netflix from anywhere
+* Albania
+* Moldova
+* Myanmar
 
-When you e.g. travel a lot, netflix locks you out as your ip address changes to a foreign one. 
-By setting up a wireguard server in your home network, you can connect "dumb" devices (with no vpn client but configurable proxy) to your home's wireguard and enjoy again, what you pay for.
+### Access Netflix from Anywhere
 
-## Quick downloads
+Traveling or using devices without VPN support? Connect “dumb” devices to your home WireGuard server through this proxy to access geo-restricted content and maintain your usual streaming experience.
 
-If you just want to download q.g. 1 file from a server with pvn, just use a docker run command. 
-The file lands on your bound volume and your real ip is kept secret.
-Also great for quick testing of region-locks. 
+### Quick Downloads & Region Testing
 
-# Features
+Download files or test region-restricted services quickly without exposing your real IP. Traffic not routed through the VPN continues using your native IP for optimal speed.
 
-- Lightweight vpn to proxy adapter available, with a docker image size of 20 MB
-- Based on privoxy
-- Split tunneling: set a whitelist of hosts, the vpn connection should be used for only, the rest is routed normally with your real ip
+## Features
 
-# Docker
+* Lightweight Docker image (\~30 MB)
+* Based on **Privoxy**
+* **Split tunneling:** route only whitelisted domains through the VPN; all other traffic uses your real IP for performance
+* Automatic periodic domain IP updates to maintain correct VPN routing
 
-Run the container using the following command, for now the container needs to run `--privileged`
+## Setup
 
-```shell
+### Prerequisites
+
+1. Obtain a WireGuard configuration file from your VPN provider (Surfshark, ExpressVPN, etc.)
+2. Save it on the host machine for Docker volume binding
+
+### Docker Server Setup
+
+#### Run the Container
+
+**Note:** The container requires `--privileged` and a Linux host to function correctly.
+
+```bash
 docker run -d \
-    --name wireguard-proxy \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
-    --cap-add=SYS_ADMIN \
     --device /dev/net/tun \
+    -e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org,whatismyipaddress.com" \
+    --name wireguard-proxy \
     --privileged \
     --pull always \
     --restart always \
-    -v "/home/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
-    -p 1080:1080 \
+    -p 8118:8118 \
+    -v "/path/to/surfshark_somelocation.conf:/home/wg0.conf:ro" \
     ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
 
-- `-v "...:/etc/wireguard/wg0.conf"` wg conf file to mount
+**Parameters:**
+
+* `-v "/path/to/wg0.conf:/etc/wireguard/wg0.conf"` — WireGuard configuration file
+* `-e "DOMAINS_TO_RELAY=..."` — Comma-separated list of domains to route via VPN
+* `-p 8118:8118` — Proxy port
+
+#### Test the Proxy
+
+From the host:
+
+```bash
+# Should return the VPN's IP
+curl -x http://localhost:8118 https://api.ipify.org  
+
+# Should return the host's real IP
+curl -x http://localhost:8118 https://api.seeip.org
+```
+
+Both commands returning expected results confirms correct operation.
+
+### Client Setup
+
+Configure your device’s network settings:
+
+* **Proxy IP:** LAN IP of the Docker host (e.g., `192.168.0.115`)
+* **Proxy Port:** Port exposed by the container (e.g., `8118`)
+
+This allows devices without native VPN support to use the VPN selectively via HTTP/HTTPS proxy.
+
+## Advantages
+
+* Lightweight and portable (\~30 MB Docker image)
+* Split-tunnel architecture for optimized performance
+* Automatic DNS/IP updates for whitelisted domains
+* No installation of a full VPN client required on client devices
+
+## Limitations
+
+* Linux host required (cannot run natively on Windows/macOS)
+* Requires `--privileged` for full network routing and TUN device support
+
+## Notes
+
+* Only traffic to whitelisted domains is routed through the VPN; all other traffic continues using your native IP.
+* Use the container in trusted environments only; it modifies network routing and firewall rules.
