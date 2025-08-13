@@ -1,45 +1,46 @@
 #!/bin/bash
 set -e
 
-# Mark to identify rules we create
 MARK="vpnroute"
+VPN_TABLE=100
+CHAIN="RELAY"
 
-# Clear and recreate mangle chain
-iptables -t mangle -N RELAY || true
+# Ensure mangle chain exists
+iptables -t mangle -N $CHAIN 2>/dev/null || true
 
 while true; do
     echo "[dns-update] Updating IP rules..."
 
-    # Read domain list from environment
     IFS=',' read -ra DOMAINS <<<"$DOMAINS_TO_RELAY"
 
-    # Clear old ip rules managed by this script
-    ip rule show | grep "$MARK" | while read -r rule; do
-        prio=$(echo "$rule" | awk '{print $1}')
-        ip rule del pref "$prio"
-    done
-
-    # Clear old mangle rules (optional: recreate clean)
-    iptables -t mangle -F RELAY
+    # Temporary lists for new rules
+    NEW_IP_RULES=()
+    NEW_MANGLE_RULES=()
 
     for domain in "${DOMAINS[@]}"; do
-        domain=$(echo "$domain" | xargs) # trim whitespace
-        if [ -z "$domain" ]; then
-            continue
-        fi
+        domain=$(echo "$domain" | xargs)
+        [ -z "$domain" ] && continue
 
-        # Resolve domain to IPs
         IPs=$(dig +short "$domain" A | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}')
 
         for ip in $IPs; do
-            # Add IP routing rule
-            ip rule add to "$ip" table 100 pref 10000 fwmark 1 comment "$MARK"
-            echo "[dns-update] Routing $domain ($ip) through VPN."
-
-            # Mark packets to these IPs
-            iptables -t mangle -A RELAY -d "$ip" -j MARK --set-mark 1
+            NEW_IP_RULES+=("$ip")
+            NEW_MANGLE_RULES+=("$ip")
         done
     done
 
+    # Apply new IP rules first
+    for ip in "${NEW_IP_RULES[@]}"; do
+        ip rule list | grep -q "$ip" || \
+            ip rule add to "$ip" table $VPN_TABLE pref 10000 fwmark 1 comment "$MARK"
+    done
+
+    # Flush old mangle rules and apply new ones
+    iptables -t mangle -F $CHAIN
+    for ip in "${NEW_MANGLE_RULES[@]}"; do
+        iptables -t mangle -A $CHAIN -d "$ip" -j MARK --set-mark 1
+    done
+
+    # Sleep before next update
     sleep 30
 done
