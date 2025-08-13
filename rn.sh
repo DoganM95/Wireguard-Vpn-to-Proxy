@@ -5,10 +5,11 @@ docker run -d \
     --name wireguard-proxy \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
+    --device /dev/net/tun \
     --sysctl net.ipv4.conf.all.src_valid_mark=1 \
     --sysctl net.ipv4.ip_forward=1 \
     --privileged \
     -p 8118:8118 \
-    -e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org" \
-    -v "/mnt2/homes/docker/Youtube-Adblock-Proxy/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
+    -e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org,whatismyipaddress.com" \
+    -v "/mnt2/homes/docker/Wireguard-Vpn-to-Proxy/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
     wireguard-proxy

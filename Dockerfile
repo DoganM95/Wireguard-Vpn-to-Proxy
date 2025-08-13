@@ -1,28 +1,19 @@
 FROM alpine:latest
 
-RUN apk add --no-cache wireguard-tools iptables curl openresolv privoxy
+# Install required packages
+RUN apk add --no-cache wireguard-tools iptables privoxy bash bind-tools curl
 
+# Ensure routing table file exists
 RUN mkdir -p /etc/iproute2 && \
-    cat > /etc/iproute2/rt_tables <<-EOF
-#
-# reserved values
-#
-255     local
-254     main
-253     default
-0       unspec
-#
-# local
-#
-EOF
+    echo -e "255\tlocal\n254\tmain\n253\tdefault\n0\tunspec" > /etc/iproute2/rt_tables
 
-# Privoxy config
-RUN echo 'listen-address  0.0.0.0:8118' > /etc/privoxy/config && \
-    echo 'forward / .'        >> /etc/privoxy/config && \
-    echo 'accept-intercepted-requests 1' >> /etc/privoxy/config && \
-    echo 'enable-remote-toggle 1'       >> /etc/privoxy/config && \
-    echo 'enable-edit-actions 1'       >> /etc/privoxy/config && \
-    echo 'permit-access 0.0.0.0/0'     >> /etc/privoxy/config
+# Privoxy configuration
+RUN printf "listen-address 0.0.0.0:8118\n\
+permit-access 0.0.0.0/0\n\
+enable-remote-toggle 1\n\
+enable-edit-actions 1\n\
+logfile /dev/stdout\n\
+forward / .\n" > /etc/privoxy/config
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh

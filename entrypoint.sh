@@ -1,39 +1,61 @@
-#!/bin/sh
-# fatal if wg fails
-wg-quick up wg0 || {
-    echo "wg-quick failed, aborting"
-    exit 1
-}
+#!/bin/bash
+set -e
 
-# ensure vpn table exists
-grep -q '^200 vpn' /etc/iproute2/rt_tables || cat >>/etc/iproute2/rt_tables <<-EOF
-200     vpn
-EOF
+# Ensure VPN routing table exists
+grep -q '^200 vpn' /etc/iproute2/rt_tables || echo "200 vpn" >> /etc/iproute2/rt_tables
 
-# point vpn→wg0 (ignore errors)
-ip route add default dev wg0 table vpn 2>/dev/null || true
+# Enable IPv4 forwarding
+sysctl -w net.ipv4.ip_forward=1
 
-# build rules for each domain (IPv4 only)
-for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
-    echo "Resolving $domain..."
-    for ip in $(getent hosts "$domain" |
-        awk '{print $1}' |
-        grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}'); do
-        ip rule add to "${ip}/32" table vpn priority 100 2>/dev/null || true
-    done
+# Bring up WireGuard
+echo "Starting WireGuard..."
+wg-quick up wg0 || { echo "wg-quick failed"; exit 1; }
+
+echo "Waiting for WireGuard handshake..."
+until wg show wg0 latest-handshakes | grep -q -v '^0$'; do
+    sleep 1
 done
+echo "WireGuard connected."
 
-# fallback everything else via main
+# Ensure VPN table has default route
+ip route flush table vpn 2>/dev/null || true
+ip route add default dev wg0 table vpn || true
+
+# Force DNS inside container
+echo "nameserver 162.252.172.57" > /etc/resolv.conf
+echo "nameserver 149.154.159.92" >> /etc/resolv.conf
+
+# Add rules for whitelisted domains
+if [ -n "$DOMAINS_TO_RELAY" ]; then
+    for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
+        echo "Resolving $domain..."
+        ips=$(dig +short A "$domain" @8.8.8.8 | sort -u)
+        for ip in $ips; do
+            echo "Routing $domain ($ip) through VPN"
+            ip rule add to "${ip}/32" table vpn priority 100 2>/dev/null || true
+        done
+    done
+fi
+
+# Send all other traffic via main table (native IP)
 ip rule add lookup main priority 32766 2>/dev/null || true
 
-# NAT & forwarding
-iptables -t nat -C POSTROUTING -o wg0 -j MASQUERADE 2>/dev/null ||
+# NAT for VPN traffic
+iptables -t nat -C POSTROUTING -o wg0 -j MASQUERADE 2>/dev/null || \
     iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-iptables -C FORWARD -i eth0 -o wg0 -j ACCEPT 2>/dev/null ||
-    iptables -A FORWARD -i eth0 -o wg0 -j ACCEPT
-iptables -C FORWARD -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null ||
+
+# Forward traffic from container to VPN
+iptables -C FORWARD -i wg0 -o wg0 -j ACCEPT 2>/dev/null || \
+    iptables -A FORWARD -i wg0 -o wg0 -j ACCEPT
+iptables -C FORWARD -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT 2>/dev/null || \
     iptables -A FORWARD -i wg0 -o eth0 -m state --state RELATED,ESTABLISHED -j ACCEPT
 
-# finally start Privoxy
-echo "Starting Privoxy…"
+# Show routing for debugging
+echo "IP Rules:"
+ip rule show
+echo "VPN Table:"
+ip route show table vpn
+
+# Start Privoxy
+echo "Starting Privoxy..."
 exec privoxy --no-daemon /etc/privoxy/config
