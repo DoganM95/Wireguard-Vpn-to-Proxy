@@ -4,6 +4,8 @@ on:
     push:
         paths-ignore:
             - "README.md" # Ignore changes to README.md
+            - rn.sh
+            - run.ps1
         branches-ignore:
             - "*dependabot*" # Ignore branches containing "dependabot"
 
