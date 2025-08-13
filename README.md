@@ -35,16 +35,16 @@ Run the container using the following command, for now the container needs to ru
 
 ```shell
 docker run -d \
-    --name wireguard-proxy \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
-    --cap-add=SYS_ADMIN \
     --device /dev/net/tun \
+    --name doganm95-wireguard-proxy \
+    --privileged \
     --privileged \
     --pull always \
     --restart always \
+    -p 8118:8118 \
     -v "/home/surfshark_albania.conf:/etc/wireguard/wg0.conf" \
-    -p 1080:1080 \
     ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
 
