@@ -25,13 +25,18 @@ Also great for quick testing of region-locks.
 
 # Features
 
-- Lightweight vpn to proxy adapter available, with a docker image size of 20 MB
+- Lightweight vpn to proxy adapter available, with a docker image size of ~ 30 MB
 - Based on privoxy
-- Split tunneling: set a whitelist of hosts, the vpn connection should be used for only, the rest is routed normally with your real ip
+- Split tunneling: set a whitelist of hosts, the vpn connection should be used for only, the rest is routed normally with your real ip for best performance
 
-# Docker
+# Setup
 
-Run the container using the following command, for now the container needs to run `--privileged`
+- Log in to your vpn provider, e.g. surfshark, expressvpn, etc. and get your wireshark vpn config files (google how)
+- Save the config file on the host machine, so it can be bound as a volume next
+
+## Docker (Server)
+
+Run the container using the following command, the container needs to run `--privileged` and can only run on a linux host.
 
 ```shell
 docker run -d \
@@ -49,3 +54,4 @@ docker run -d \
 ```
 
 - `-v "...:/etc/wireguard/wg0.conf"` wg conf file to mount
+- `-e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org,whatismyipaddress.com" \` comma separated list of domains, that should be routed through the vpn
