@@ -1,4 +1,0 @@
-listen-address  0.0.0.0:8118
-accept-intercepted-requests 1
-permit-access 0.0.0.0/0
-forwarded-connect-retries 1
