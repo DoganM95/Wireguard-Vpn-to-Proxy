@@ -41,9 +41,9 @@ jobs:
                   context: .
                   push: true
                   tags: |
-                      ghcr.io/doganm95/youtube-adblock-proxy${{ env.TAG_SUFFIX }}:v${{ github.run_number }}
-                      ghcr.io/doganm95/youtube-adblock-proxy${{ env.TAG_SUFFIX }}:${{ github.sha }}
-                      ghcr.io/doganm95/youtube-adblock-proxy${{ env.TAG_SUFFIX }}:latest
+                      ghcr.io/doganm95/wireguard-vpn-proxy${{ env.TAG_SUFFIX }}:v${{ github.run_number }}
+                      ghcr.io/doganm95/wireguard-vpn-proxy${{ env.TAG_SUFFIX }}:${{ github.sha }}
+                      ghcr.io/doganm95/wireguard-vpn-proxy${{ env.TAG_SUFFIX }}:latest
                   labels: |
                       org.opencontainers.image.source=${{ github.repository_url }}
                       org.opencontainers.image.revision=${{ github.sha }}
