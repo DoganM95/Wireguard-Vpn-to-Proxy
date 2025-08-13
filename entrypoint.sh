@@ -1,6 +1,22 @@
 #!/bin/bash
 set -e
 
+# Copy mounted WireGuard config to /etc/wireguard/wg0.conf
+WG_SRC="/home/wg0.conf"
+WG_DST="/etc/wireguard/wg0.conf"
+
+# Ensure destination directory exists
+mkdir -p /etc/wireguard
+
+# Copy the file
+cp "$WG_SRC" "$WG_DST"
+
+# Insert "Table = off" after [Interface] if not already present
+if ! grep -q '^Table *= *off' "$WG_DST"; then
+    # Insert after [Interface] line
+    sed -i '/^\[Interface\]/a Table = off' "$WG_DST"
+fi
+
 # Ensure VPN routing table exists
 grep -q '^200 vpn' /etc/iproute2/rt_tables || echo "200 vpn" >> /etc/iproute2/rt_tables
 
