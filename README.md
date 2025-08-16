@@ -45,8 +45,9 @@ docker run -d \
     --cap-add=NET_ADMIN \
     --cap-add=SYS_MODULE \
     --device /dev/net/tun \
+    -e "DNS1=94.140.14.14" \
     -e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org,whatismyipaddress.com" \
-    --name wireguard-proxy \
+    --name doganm95-wireguard-vpn-proxy \
     --privileged \
     --pull always \
     --restart always \
