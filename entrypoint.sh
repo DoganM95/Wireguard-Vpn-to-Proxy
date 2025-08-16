@@ -37,15 +37,22 @@ echo "WireGuard connected."
 ip route flush table vpn 2>/dev/null || true
 ip route add default dev wg0 table vpn || true
 
-# Force DNS inside container
-echo "nameserver 162.252.172.57" > /etc/resolv.conf
-echo "nameserver 149.154.159.92" >> /etc/resolv.conf
+# Force DNS inside container using env vars
+if [ -n "$DNS1" ]; then
+    echo "nameserver $DNS1" > /etc/resolv.conf
+    if [ -n "$DNS2" ]; then
+        echo "nameserver $DNS2" >> /etc/resolv.conf
+    fi
+else
+    echo "[ERROR] DNS1 environment variable not set"
+    exit 1
+fi
 
 # Add rules for whitelisted domains (initial)
 if [ -n "$DOMAINS_TO_RELAY" ]; then
     for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
         echo "Resolving $domain..."
-        ips=$(dig +short A "$domain" @8.8.8.8 | sort -u)
+        ips=$(dig +short A "$domain" @"$DNS1" | sort -u)
         for ip in $ips; do
             echo "Routing $domain ($ip) through VPN"
             ip rule add to "${ip}/32" table vpn priority 100 2>/dev/null || true
