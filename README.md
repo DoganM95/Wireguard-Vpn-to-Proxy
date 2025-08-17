@@ -26,6 +26,8 @@ Download files or test region-restricted services quickly without exposing your 
 * Based on **Privoxy**
 * **Split tunneling:** route only whitelisted domains through the VPN; all other traffic uses your real IP for performance
 * Automatic periodic domain IP updates to maintain correct VPN routing
+* Gets a new IP address with every container restart
+* Container restarts are very fast
 
 ## Setup
 
