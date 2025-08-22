@@ -54,7 +54,7 @@ docker run -d \
     --pull always \
     --restart always \
     -p 8118:8118 \
-    -v "/path/to/surfshark_somelocation.conf:/home/wg0.conf:ro" \
+    -v "/path/to/any_wireguard.conf:/home/wg0.conf:ro" \
     ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
 
