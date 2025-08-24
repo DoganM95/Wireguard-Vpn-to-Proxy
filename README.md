@@ -103,3 +103,10 @@ This allows devices without native VPN support to use the VPN selectively via HT
 
 * Only traffic to whitelisted domains is routed through the VPN; all other traffic continues using your native IP.
 * Use the container in trusted environments only; it modifies network routing and firewall rules.
+
+## Useful commands
+
+Restart all containers that have this string in their name (gets new ipv4 per container)
+```shell
+docker ps -q --filter "name=proxy" | xargs -r docker restart
+```
