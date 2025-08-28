@@ -26,6 +26,8 @@ Download files or test region-restricted services quickly without exposing your 
 * Based on **Privoxy**
 * **Split tunneling:** route only whitelisted domains through the VPN; all other traffic uses your real IP for performance
 * Automatic periodic domain IP updates to maintain correct VPN routing
+* Gets a new IP address with every container restart, if provider is a VPN hoster
+* Container restarts are very fast
 
 ## Setup
 
@@ -52,7 +54,7 @@ docker run -d \
     --pull always \
     --restart always \
     -p 8118:8118 \
-    -v "/path/to/surfshark_somelocation.conf:/home/wg0.conf:ro" \
+    -v "/path/to/any_wireguard.conf:/home/wg0.conf:ro" \
     ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
 
@@ -101,3 +103,10 @@ This allows devices without native VPN support to use the VPN selectively via HT
 
 * Only traffic to whitelisted domains is routed through the VPN; all other traffic continues using your native IP.
 * Use the container in trusted environments only; it modifies network routing and firewall rules.
+
+## Useful commands
+
+Restart all containers that have this string in their name (gets new ipv4 per container)
+```shell
+docker ps -q --filter "name=proxy" | xargs -r docker restart
+```
