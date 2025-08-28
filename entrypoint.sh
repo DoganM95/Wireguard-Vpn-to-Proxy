@@ -18,24 +18,26 @@ if ! grep -q '^Table *= *off' "$WG_DST"; then
 fi
 
 # Ensure VPN routing table exists
-grep -q '^200 vpn' /etc/iproute2/rt_tables || echo "200 vpn" >> /etc/iproute2/rt_tables
+grep -qE '^[[:space:]]*200[[:space:]]+vpn$' /etc/iproute2/rt_tables || echo "200 vpn" >> /etc/iproute2/rt_tables
 
-# Enable IPv4 forwarding
+# Enable IPv4 forwarding and relax rp_filter for policy routing
 sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv4.conf.all.rp_filter=0
+sysctl -w net.ipv4.conf.default.rp_filter=0
 
 # Bring up WireGuard
 echo "Starting WireGuard..."
 wg-quick up wg0 || { echo "wg-quick failed"; exit 1; }
 
 echo "Waiting for WireGuard handshake..."
-until wg show wg0 latest-handshakes | grep -q -v '^0$'; do
+until wg show wg0 latest-handshakes | awk '{print $2}' | grep -q -v '^0$'; do
     sleep 1
 done
 echo "WireGuard connected."
 
 # Ensure VPN table has default route
 ip route flush table vpn 2>/dev/null || true
-ip route add default dev wg0 table vpn || true
+ip route add default dev wg0 table vpn 2>/dev/null || true
 
 # Force DNS inside container using env vars
 if [ -n "$DNS1" ]; then
@@ -48,25 +50,31 @@ else
     exit 1
 fi
 
-# Add rules for whitelisted domains (initial)
+# MSS clamping to avoid MTU issues over VPN (helps sites like Instagram/Speedtest)
+iptables -t mangle -C OUTPUT -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || \
+iptables -t mangle -A OUTPUT -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+iptables -t mangle -C FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu 2>/dev/null || \
+iptables -t mangle -A FORWARD -o wg0 -p tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+
+# Add rules for whitelisted domains (or full tunnel when unset/"*")
 if [ -z "$DOMAINS_TO_RELAY" ] || [ "$DOMAINS_TO_RELAY" = "*" ]; then
     echo "Routing ALL traffic through VPN..."
-    ip rule add from all lookup vpn priority 100
+    # High-priority rule sends everything to vpn table
+    ip rule show | grep -q "lookup vpn" || ip rule add from all lookup vpn priority 100
 else
     for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
-        echo "Resolving $domain..."
-        ips=$(dig +short A "$domain" @"$DNS1" | sort -u)
-        for ip in $ips; do
-            echo "Routing $domain ($ip) through VPN"
-            ip rule add to "${ip}/32" table vpn priority 100 2>/dev/null || true
+        d="$(echo "$domain" | xargs)"; [ -z "$d" ] && continue
+        echo "Resolving $d..."
+        ips=$(dig +short A "$d" @"$DNS1" | grep -Eo '([0-9]{1,3}\.){3}[0-9]{1,3}' | sort -u)
+        for ipaddr in $ips; do
+            echo "Routing $d ($ipaddr) through VPN"
+            ip rule list | grep -q "to $ipaddr/32.*lookup vpn" || \
+                ip rule add to "${ipaddr}/32" table vpn priority 100
         done
     done
     # Send all other traffic via main table (native IP)
-    ip rule add lookup main priority 32766 2>/dev/null || true
+    ip rule list | grep -q "lookup main" || ip rule add lookup main priority 32766
 fi
-
-# Send all other traffic via main table (native IP)
-ip rule add lookup main priority 32766 2>/dev/null || true
 
 # NAT for VPN traffic
 iptables -t nat -C POSTROUTING -o wg0 -j MASQUERADE 2>/dev/null || \
