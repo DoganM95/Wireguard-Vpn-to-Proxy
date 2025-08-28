@@ -11,23 +11,6 @@ iptables -t mangle -N $CHAIN 2>/dev/null || true
 while true; do
     echo "[dns-update] Updating IP rules..."
 
-    if [ -z "$DOMAINS_TO_RELAY" ] || [ "$DOMAINS_TO_RELAY" = "*" ]; then
-        echo "[dns-update] DOMAINS_TO_RELAY is unset or '*', routing ALL traffic through VPN."
-        # Flush old chain to avoid stale domain-specific rules
-        iptables -t mangle -F $CHAIN 2>/dev/null || true
-
-        # Mark everything
-        iptables -t mangle -C $CHAIN -j MARK --set-mark 1 2>/dev/null || \
-            iptables -t mangle -A $CHAIN -j MARK --set-mark 1
-
-        # Ensure global ip rule exists
-        ip rule list | grep -q "fwmark 1 lookup $VPN_TABLE" || \
-            ip rule add fwmark 1 table $VPN_TABLE pref 10000 comment "$MARK"
-
-        sleep 30
-        continue
-    fi
-
     IFS=',' read -ra DOMAINS <<<"$DOMAINS_TO_RELAY"
 
     # Temporary lists for new rules

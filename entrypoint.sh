@@ -49,10 +49,7 @@ else
 fi
 
 # Add rules for whitelisted domains (initial)
-if [ -z "$DOMAINS_TO_RELAY" ] || [ "$DOMAINS_TO_RELAY" = "*" ]; then
-    echo "Routing ALL traffic through VPN..."
-    ip rule add from all lookup vpn priority 100
-else
+if [ -n "$DOMAINS_TO_RELAY" ]; then
     for domain in $(echo "$DOMAINS_TO_RELAY" | tr ',' ' '); do
         echo "Resolving $domain..."
         ips=$(dig +short A "$domain" @"$DNS1" | sort -u)
@@ -61,8 +58,6 @@ else
             ip rule add to "${ip}/32" table vpn priority 100 2>/dev/null || true
         done
     done
-    # Send all other traffic via main table (native IP)
-    ip rule add lookup main priority 32766 2>/dev/null || true
 fi
 
 # Send all other traffic via main table (native IP)
