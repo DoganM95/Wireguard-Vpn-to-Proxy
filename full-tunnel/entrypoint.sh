@@ -9,8 +9,13 @@ if [ ! -f "$WG_CONF" ]; then
 fi
 
 echo "Starting WireGuard..."
+# Bring up WireGuard via wg-quick (resolvconf + iptables now installed)
 wg-quick up "$WG_CONF"
 
+# Wait a moment to ensure interface is up
+sleep 2
+
+# Configure Privoxy
 echo "Starting Privoxy..."
 cat > /etc/privoxy/config <<EOF
 listen-address 0.0.0.0:8118
