@@ -32,5 +32,9 @@ iptables -t nat -A POSTROUTING -o $WG_IFACE -j MASQUERADE
 iptables -A FORWARD -i $WG_IFACE -j ACCEPT
 iptables -A FORWARD -o $WG_IFACE -j ACCEPT
 
+# Ensure templates folder and required file exist
+mkdir -p /etc/privoxy/templates
+touch /etc/privoxy/templates/no-such-domain
+
 echo "Starting Privoxy..."
 exec privoxy --no-daemon /etc/privoxy/config
