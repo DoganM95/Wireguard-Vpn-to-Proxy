@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WG_CONF="/conf/wg0.conf"
+WG_CONF="/etc/wireguard/wg0.conf"
 
 if [ ! -f "$WG_CONF" ]; then
     echo "WireGuard config not found at $WG_CONF"
