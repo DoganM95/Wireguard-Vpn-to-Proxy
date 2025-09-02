@@ -1,7 +1,9 @@
-FROM alpine:latest
+FROM debian:bookworm-slim
 
-# Install necessary tools
-RUN apk add --no-cache wireguard-tools iproute2 iptables privoxy bash curl
+# Install dependencies
+RUN apt-get update && apt-get install -y \
+    wireguard-tools iproute2 iptables resolvconf privoxy curl bash \
+    && rm -rf /var/lib/apt/lists/*
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
