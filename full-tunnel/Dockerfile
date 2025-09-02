@@ -1,7 +1,14 @@
-# Dockerfile
 FROM alpine:latest
-RUN apk add --no-cache wireguard-tools iptables privoxy bash openresolv curl ca-certificates
-RUN printf "listen-address 0.0.0.0:8118\npermit-access 0.0.0.0/0\nlogfile /dev/stdout\nforward / .\n" > /etc/privoxy/config
+
+RUN apk add --no-cache wireguard-tools iptables privoxy bash
+
+# Create directories for configs
+RUN mkdir -p /etc/wireguard /etc/privoxy
+
+# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
+
+EXPOSE 8118
+
 ENTRYPOINT ["/entrypoint.sh"]
