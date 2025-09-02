@@ -1,16 +1,14 @@
-FROM alpine:3.18
+FROM alpine:latest
 
-# Install necessary packages
-RUN apk add --no-cache \
-    bash \
-    wireguard-tools \
-    iproute2 \
-    iptables \
-    openresolv \
-    privoxy \
-    curl
+# Install required packages
+RUN apk add --no-cache wireguard-tools iptables privoxy bash curl
 
-# Copy entrypoint script
+# Minimal Privoxy configuration
+RUN printf "listen-address 0.0.0.0:8118\n\
+    permit-access 0.0.0.0/0\n\
+    logfile /dev/stdout\n\
+    forward / .\n" > /etc/privoxy/config
+
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

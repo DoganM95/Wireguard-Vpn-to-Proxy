@@ -11,6 +11,7 @@ fi
 
 echo "Bringing up WireGuard..."
 ip link add dev $WG_IFACE type wireguard
+
 WG_PRIVATE_KEY=$(grep '^PrivateKey' $WG_CONF | awk '{print $3}')
 PEER_PUBLIC_KEY=$(grep '^PublicKey' $WG_CONF | awk '{print $3}')
 PEER_ENDPOINT=$(grep '^Endpoint' $WG_CONF | awk '{print $3}')
@@ -26,23 +27,16 @@ ip link set up dev $WG_IFACE
 ip route del default || true
 ip route add default dev $WG_IFACE
 
-# NAT for outgoing traffic
+# Apply NAT
 iptables -t nat -A POSTROUTING -o $WG_IFACE -j MASQUERADE
 iptables -A FORWARD -i $WG_IFACE -j ACCEPT
 iptables -A FORWARD -o $WG_IFACE -j ACCEPT
 
-# Ensure Privoxy templates directory exists
+# Ensure Privoxy templates exist (minimal)
 mkdir -p /etc/privoxy/templates
 touch /etc/privoxy/templates/no-such-domain
-
-# Minimal Privoxy config
-cat > /etc/privoxy/config <<EOF
-listen-address 0.0.0.0:8118
-confdir /etc/privoxy
-logdir /var/log/privoxy
-actionsfile standard.action
-filterfile default.filter
-EOF
+touch /etc/privoxy/standard.action
+touch /etc/privoxy/default.filter
 
 echo "Starting Privoxy..."
 exec privoxy --no-daemon /etc/privoxy/config
