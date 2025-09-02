@@ -54,7 +54,7 @@ docker run -d \
     --privileged \
     --pull always \
     --restart always \
-    -p 8118:8118 \
+    -p 8120:8118 \
     -v "/path/to/any_wireguard.conf:/home/wg0.conf:ro" \
     ghcr.io/doganm95/wireguard-vpn-proxy:latest
 ```
@@ -63,7 +63,7 @@ docker run -d \
 
 * `-v "/path/to/wg0.conf:/etc/wireguard/wg0.conf"` — WireGuard configuration file
 * `-e "DOMAINS_TO_RELAY=..."` — Comma-separated list of domains to route via VPN
-* `-p 8118:8118` — Proxy port
+* `-p 8120:8118` — Proxy port
 
 #### Test the Proxy
 
@@ -71,10 +71,10 @@ From the host:
 
 ```bash
 # Should return the VPN's IP
-curl -x http://localhost:8118 https://api.ipify.org  
+curl -x http://localhost:8120 https://api.ipify.org  
 
 # Should return the host's real IP
-curl -x http://localhost:8118 https://api.seeip.org
+curl -x http://localhost:8120 https://api.seeip.org
 ```
 
 Both commands returning expected results confirms correct operation.
@@ -186,7 +186,7 @@ The sing-box container can now be used as the main proxy and will do all the dom
 Configure your device’s network settings:
 
 * **Proxy IP:** LAN IP of the Docker host (e.g., `192.168.0.115`)
-* **Proxy Port:** Port exposed by the container (e.g., `8118` for single container, or `6666` to use sing-box (multi proxy mode))
+* **Proxy Port:** Port exposed by the container (e.g., `8120` for single container, or `6666` to use sing-box (multi proxy mode))
 
 This allows devices without native VPN support to use the VPN selectively via HTTP/HTTPS proxy.
 
