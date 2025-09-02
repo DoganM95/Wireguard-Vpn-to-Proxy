@@ -23,7 +23,7 @@ wg set $WG_IFACE peer $PEER_PUBLIC_KEY endpoint $PEER_ENDPOINT allowed-ips $ALLO
 ip addr add $WG_ADDRESS dev $WG_IFACE
 ip link set up dev $WG_IFACE
 
-# Set default route through WireGuard
+# Set default route via WireGuard
 ip route del default || true
 ip route add default dev $WG_IFACE
 
@@ -31,12 +31,6 @@ ip route add default dev $WG_IFACE
 iptables -t nat -A POSTROUTING -o $WG_IFACE -j MASQUERADE
 iptables -A FORWARD -i $WG_IFACE -j ACCEPT
 iptables -A FORWARD -o $WG_IFACE -j ACCEPT
-
-# Ensure Privoxy templates exist (minimal)
-mkdir -p /etc/privoxy/templates
-touch /etc/privoxy/templates/no-such-domain
-touch /etc/privoxy/standard.action
-touch /etc/privoxy/default.filter
 
 echo "Starting Privoxy..."
 exec privoxy --no-daemon /etc/privoxy/config
