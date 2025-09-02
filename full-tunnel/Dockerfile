@@ -1,7 +1,9 @@
 FROM alpine:latest
 
-RUN apk add --no-cache wireguard-tools iptables privoxy bash openresolv
+# Install necessary packages
+RUN apk add --no-cache wireguard-tools iproute2 privoxy bash curl
 
+# Copy entrypoint script
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 

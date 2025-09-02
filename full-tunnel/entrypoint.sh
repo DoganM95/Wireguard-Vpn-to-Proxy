@@ -1,37 +1,35 @@
 #!/bin/bash
 set -e
 
-echo ">>> Running custom entrypoint.sh"
+WG_CONF="/conf/wg0.conf"
 
-WG_CONF=/etc/wireguard/wg0.conf
-PRIVOXY_CONF=/etc/privoxy/config
-
+# Check if WireGuard config exists
 if [ ! -f "$WG_CONF" ]; then
     echo "WireGuard config not found at $WG_CONF"
     exit 1
 fi
 
-# Bring up WireGuard
-wg-quick up wg0
+# Start WireGuard
+echo "Starting WireGuard..."
+wg-quick up "$WG_CONF"
 
-# Force DNS from config
-DNS_LINE=$(grep '^DNS' "$WG_CONF" | cut -d= -f2- | tr -d ' ')
-if [ -n "$DNS_LINE" ]; then
-    echo -n "" > /etc/resolv.conf
-    IFS=',' read -ra DNS_SERVERS <<< "$DNS_LINE"
-    for dns in "${DNS_SERVERS[@]}"; do
-        echo "nameserver $dns" >> /etc/resolv.conf
-    done
-fi
+# Configure iptables for NAT routing
+echo "Enabling NAT..."
+WG_IFACE=$(basename "$WG_CONF" .conf)
+iptables -t nat -A POSTROUTING -o "$WG_IFACE" -j MASQUERADE
+iptables -A FORWARD -i "$WG_IFACE" -j ACCEPT
+iptables -A FORWARD -o "$WG_IFACE" -j ACCEPT
 
-# Optional: NAT masquerade so *all* traffic goes through WireGuard
-iptables -t nat -A POSTROUTING -o wg0 -j MASQUERADE
-
-# Minimal HTTP-only Privoxy config
-cat > "$PRIVOXY_CONF" <<EOF
+# Configure Privoxy to forward traffic through WireGuard
+echo "Configuring Privoxy..."
+cat > /etc/privoxy/config <<EOF
 listen-address 0.0.0.0:8118
-# no forward-socks5t line
+forward-socks5t / 127.0.0.1:9050 .
 EOF
 
+# Make Privoxy use HTTP (no SOCKS5)
+sed -i 's/forward-socks5t/#forward-socks5t/' /etc/privoxy/config
+
 # Start Privoxy
-exec privoxy --no-daemon "$PRIVOXY_CONF"
+echo "Starting Privoxy..."
+privoxy --no-daemon /etc/privoxy/config
