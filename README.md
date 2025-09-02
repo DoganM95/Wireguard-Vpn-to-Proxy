@@ -185,7 +185,7 @@ The sing-box container can now be used as the main proxy and will do all the dom
 Configure your device’s network settings:
 
 * **Proxy IP:** LAN IP of the Docker host (e.g., `192.168.0.115`)
-* **Proxy Port:** Port exposed by the container (e.g., `8118`)
+* **Proxy Port:** Port exposed by the container (e.g., `8118` for single container, or `6666` to use sing-box (multi proxy mode))
 
 This allows devices without native VPN support to use the VPN selectively via HTTP/HTTPS proxy.
 
