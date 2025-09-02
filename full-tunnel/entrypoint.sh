@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WG_CONF="/conf/wg0.conf"
+WG_CONF="/home/wg0.conf"
 
 # Check if WireGuard config exists
 if [ ! -f "$WG_CONF" ]; then
