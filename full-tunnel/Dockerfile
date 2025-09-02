@@ -1,19 +1,17 @@
 FROM alpine:latest
 
-RUN apk add --no-cache wireguard-tools iptables privoxy bash curl
+# Install required packages
+RUN apk add --no-cache wireguard-tools iptables privoxy bash bind-tools curl
 
-# Minimal Privoxy config (multiline, readable)
+# Privoxy configuration
 RUN printf "listen-address 0.0.0.0:8118\n\
     permit-access 0.0.0.0/0\n\
+    enable-remote-toggle 1\n\
+    enable-edit-actions 1\n\
     logfile /dev/stdout\n\
     forward / .\n" > /etc/privoxy/config
-
-# Ensure templates folder exists and create required template file
-RUN mkdir -p /etc/privoxy/templates && \
-    echo "Internal error template" > /etc/privoxy/templates/no-such-domain
 
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 8118
 ENTRYPOINT ["/entrypoint.sh"]
