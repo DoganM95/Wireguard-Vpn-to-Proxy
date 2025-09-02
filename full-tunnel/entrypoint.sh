@@ -1,9 +1,5 @@
 #!/bin/bash
-
 set -e
-
-# Start WireGuard VPN
-wg-quick up /etc/wireguard/wg0.conf
-
-# Start Privoxy in foreground
+# Comment out WireGuard startup
+# wg-quick up /etc/wireguard/wg0.conf
 exec privoxy --no-daemon /etc/privoxy/config
