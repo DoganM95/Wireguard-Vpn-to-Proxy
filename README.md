@@ -36,9 +36,9 @@ Download files or test region-restricted services quickly without exposing your 
 1. Obtain a WireGuard configuration file from your VPN provider (Surfshark, ExpressVPN, etc.)
 2. Save it on the host machine for Docker volume binding
 
-### Run a proxy container (whitelist mode)
+### Run a proxy container (whitelist mode aka split-tunnelled)
 
-In whitelist mode, every domain defined using the env var `DOMAINS_TO_RELAY` is routed through the vpn tunnel.
+The split-tunnelled image `wireguard-vpn-proxy-st` only routes domains defined using the env var `DOMAINS_TO_RELAY` through the vpn tunnel.
 Any other traffic is routed directly, so the host only acts like bridge, but does not alter the trafic.
 
 **Note:** The container requires `--privileged` and a Linux host to function correctly.
@@ -50,13 +50,13 @@ docker run -d \
     --device /dev/net/tun \
     -e "DNS1=94.140.14.14" \
     -e "DOMAINS_TO_RELAY=youtube.com,api.ipify.org,whatismyipaddress.com" \
-    --name doganm95-wireguard-vpn-proxy \
+    --name doganm95-wireguard-vpn-proxy-split-tunnelled \
     --privileged \
     --pull always \
-    --restart always \
+    --restart unless-stopped \
     -p 8120:8118 \
     -v "/path/to/any_wireguard.conf:/home/wg0.conf:ro" \
-    ghcr.io/doganm95/wireguard-vpn-proxy:latest
+    ghcr.io/doganm95/wireguard-vpn-proxy-st:latest
 ```
 
 **Parameters:**
@@ -78,6 +78,25 @@ curl -x http://localhost:8120 https://api.seeip.org
 ```
 
 Both commands returning expected results confirms correct operation.
+
+### Run a proxy container (full proxy)
+
+The general image `wireguard-vpn-proxy` routes all traffic through the vpn tunnel. 
+
+```bash
+docker run -d \
+    --cap-add=NET_ADMIN \
+    --cap-add=SYS_MODULE \
+    --device /dev/net/tun \
+    -e "DNS1=94.140.14.14" \
+    --name doganm95-wireguard-vpn-proxy \
+    --privileged \
+    --pull always \
+    --restart unless-stopped \
+    -p 8120:8118 \
+    -v "/path/to/any_wireguard.conf:/home/wg0.conf:ro" \
+    ghcr.io/doganm95/wireguard-vpn-proxy:latest
+```
 
 ## Setup (multiple proxies)
 
