@@ -29,16 +29,17 @@ Download files or test region-restricted services quickly without exposing your 
 * Gets a new IP address with every container restart, if provider is a VPN hoster
 * Container restarts are very fast
 
-## Setup
+## Setup (individual proxies)
 
-### Prerequisites
+### Prerequisites:
 
 1. Obtain a WireGuard configuration file from your VPN provider (Surfshark, ExpressVPN, etc.)
 2. Save it on the host machine for Docker volume binding
 
-### Docker Server Setup
+### Run a proxy container (whitelist mode)
 
-#### Run the Container
+In whitelist mode, every domain defined using the env var `DOMAINS_TO_RELAY` is routed through the vpn tunnel.
+Any other traffic is routed directly, so the host only acts like bridge, but does not alter the trafic.
 
 **Note:** The container requires `--privileged` and a Linux host to function correctly.
 
@@ -77,6 +78,107 @@ curl -x http://localhost:8118 https://api.seeip.org
 ```
 
 Both commands returning expected results confirms correct operation.
+
+## Setup (multiple proxxies)
+
+This section shows how to create many individual proxy containers (children) and a main proxy routing container (parent), 
+so that the parent can be used as a proxy server in any client and does the routing of which domain goes through which proxy.
+
+For this, sing-box is used as the parent container, which can be set up like this:
+
+Create a config file, named `config.json` with the following working example content:
+
+```json
+{
+  "log": {
+    "disabled": false,
+    "level": "trace",
+    "timestamp": true
+  },
+  "dns": {
+    "servers": [
+      {
+        "tag": "local",
+        "address": "94.140.14.14",
+        "strategy": "ipv4_only",
+        "detour": "direct-out"
+      }
+    ]
+  },
+  "inbounds": [
+    {
+      "type": "mixed",
+      "tag": "mixed-in",
+      "listen": "0.0.0.0",
+      "listen_port": 8118
+    }
+  ],
+  "outbounds": [
+    {
+      "type": "http",
+      "tag": "proxy-A",
+      "server": "172.17.0.1",
+      "server_port": 8120
+    },
+    {
+      "type": "http",
+      "tag": "proxy-B",
+      "server": "172.17.0.1",
+      "server_port": 8121
+    },
+    {
+      "type": "direct",
+      "tag": "direct-out"
+    }
+  ],
+  "route": {
+    "rules": [
+      {
+        "inbound": [
+          "mixed-in"
+        ],
+        "domain_suffix": [
+          "whatismyipaddress.com"
+        ],
+        "outbound": "proxy-A"
+      },
+      {
+        "inbound": [
+          "mixed-in"
+        ],
+        "domain_suffix": [
+          "showmyip.com"
+        ],
+        "outbound": "proxy-B"
+      }
+    ],
+    "final": "direct-out"
+  }
+}
+```
+
+Notes:
+
+- `dns.servers[0].address` defines dns server to use (here adguard to block any ads by dns)
+- `outbounds.server` defines the ip of the proxy containers host (you can get this using `docker inspect some-proxy-container` and checking its network section), `host.docker.internal` does not work in this case.
+- `route.rules` defines objects with routing configurations. Here <whatmipaddress.com> will show the ip of proxy-A, <showmyip.com> the ip of proxy-B and any other website will show your real IP, expand as needed.
+
+When the config is created and saved, run the sing-box container like this (adjust if needed):
+
+```bash
+docker run -d \
+  --add-host=host.docker.internal:host-gateway \
+  --name sagernet-singbox \
+  --pull always \
+  -p 6666:8118 \
+  --restart unless-stopped \
+  -v "/path/to/Singbox/:/etc/sing-box/" \
+  ghcr.io/sagernet/sing-box \
+  -D /var/lib/sing-box \
+  -C /etc/sing-box/ run
+```
+
+The sing-box container can now be used as the main proxy and will do all the domain based routing through the defind proxies as per `config.json`. See below how to use it in clients.
 
 ### Client Setup
 
