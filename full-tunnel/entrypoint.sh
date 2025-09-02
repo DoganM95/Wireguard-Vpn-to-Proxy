@@ -1,7 +1,7 @@
 #!/bin/bash
 set -e
 
-WG_CONF="/conf/wg0.conf"
+WG_CONF="/etc/wireguard/wg0.conf"
 WG_IFACE="wg0"
 
 # Check if config exists
