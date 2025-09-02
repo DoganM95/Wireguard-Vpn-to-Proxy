@@ -79,7 +79,7 @@ curl -x http://localhost:8118 https://api.seeip.org
 
 Both commands returning expected results confirms correct operation.
 
-## Setup (multiple proxxies)
+## Setup (multiple proxies)
 
 This section shows how to create many individual proxy containers (children) and a main proxy routing container (parent), 
 so that the parent can be used as a proxy server in any client and does the routing of which domain goes through which proxy.
@@ -163,7 +163,8 @@ Notes:
 - `outbounds.server` defines the ip of the proxy containers host (you can get this using `docker inspect some-proxy-container` and checking its network section), `host.docker.internal` does not work in this case.
 - `route.rules` defines objects with routing configurations. Here <whatmipaddress.com> will show the ip of proxy-A, <showmyip.com> the ip of proxy-B and any other website will show your real IP, expand as needed.
 
-When the config is created and saved, run the sing-box container like this (adjust if needed):
+When the config is created and saved, run the sing-box container like this (adjust if needed).  
+The config file must be stored in `/path/to/Singbox/` in this example.
 
 ```bash
 docker run -d \
