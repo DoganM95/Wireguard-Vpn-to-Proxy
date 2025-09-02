@@ -1,11 +1,8 @@
 FROM alpine:latest
 
-RUN apk add --no-cache wireguard-tools iptables privoxy bash
+RUN apk add --no-cache wireguard-tools iptables privoxy bash openresolv
 
-# Create directories for configs
 RUN mkdir -p /etc/wireguard /etc/privoxy
-
-# Copy entrypoint
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
