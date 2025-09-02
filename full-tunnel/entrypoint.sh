@@ -9,34 +9,39 @@ if [ ! -f "$WG_CONF" ]; then
     exit 1
 fi
 
-echo "Bringing up WireGuard interface..."
+echo "Bringing up WireGuard..."
 ip link add dev $WG_IFACE type wireguard
-
-# Extract interface and peer details
 WG_PRIVATE_KEY=$(grep '^PrivateKey' $WG_CONF | awk '{print $3}')
 PEER_PUBLIC_KEY=$(grep '^PublicKey' $WG_CONF | awk '{print $3}')
 PEER_ENDPOINT=$(grep '^Endpoint' $WG_CONF | awk '{print $3}')
 ALLOWED_IPS=$(grep '^AllowedIPs' $WG_CONF | awk '{print $3}')
 WG_ADDRESS=$(grep '^Address' $WG_CONF | awk '{print $3}')
 
-# Set up WireGuard
 wg set $WG_IFACE private-key <(echo $WG_PRIVATE_KEY)
 wg set $WG_IFACE peer $PEER_PUBLIC_KEY endpoint $PEER_ENDPOINT allowed-ips $ALLOWED_IPS
 ip addr add $WG_ADDRESS dev $WG_IFACE
 ip link set up dev $WG_IFACE
 
-# Set default route via WireGuard
+# Set default route through WireGuard
 ip route del default || true
 ip route add default dev $WG_IFACE
 
-# Apply NAT rules
+# NAT for outgoing traffic
 iptables -t nat -A POSTROUTING -o $WG_IFACE -j MASQUERADE
 iptables -A FORWARD -i $WG_IFACE -j ACCEPT
 iptables -A FORWARD -o $WG_IFACE -j ACCEPT
 
+# Ensure Privoxy templates directory exists
+mkdir -p /etc/privoxy/templates
+touch /etc/privoxy/templates/no-such-domain
+
 # Minimal Privoxy config
 cat > /etc/privoxy/config <<EOF
 listen-address 0.0.0.0:8118
+confdir /etc/privoxy
+logdir /var/log/privoxy
+actionsfile standard.action
+filterfile default.filter
 EOF
 
 echo "Starting Privoxy..."
