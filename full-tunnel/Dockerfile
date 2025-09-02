@@ -8,9 +8,8 @@ RUN printf "listen-address 0.0.0.0:8118\n\
     logfile /dev/stdout\n\
     forward / .\n" > /etc/privoxy/config
 
-# Ensure templates folder exists (required by Alpine privoxy)
-RUN mkdir -p /etc/privoxy/templates \
-    touch /etc/privoxy/templates/no-such-domain \
+# Ensure templates folder exists and create required template file
+RUN mkdir -p /etc/privoxy/templates && \
     echo "Internal error template" > /etc/privoxy/templates/no-such-domain
 
 COPY entrypoint.sh /entrypoint.sh
